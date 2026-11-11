@@ -1,0 +1,24 @@
+@font-face{font-family:SurveyCJK;src:url('fonts/wqy-microhei.ttf') format('truetype');font-display:swap}
+body,input,button,select,textarea{font-family:SurveyCJK,system-ui,sans-serif}
+.media{min-width:0}.mosaic-scroll{width:max-content;max-width:100%;overflow-x:auto;background:transparent}
+.mosaic-scroll.centered{margin-left:auto;margin-right:auto}
+.mosaic{width:max-content;max-width:none;margin:0;padding:0;line-height:0}
+.frame-row{display:flex;position:relative;width:max-content;gap:0;margin:0;padding:0;line-height:0}
+.camera-cell{height:216px;flex:none;position:relative;margin:0;padding:0;overflow:hidden;background:#101722}
+.camera-cell img{display:block;width:100%;height:100%;max-width:none;margin:0;border:0;border-radius:0;object-fit:fill}
+.camera-cell svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.camera-label,.frame-time{position:absolute;z-index:2;color:#fff;background:#101722a8;font:12px/1.5 SurveyCJK,sans-serif;padding:2px 6px;pointer-events:none}
+.camera-label{left:0;top:0}.frame-time{left:0;bottom:0}.frame-row.current .frame-time{background:#174e74de}
+.path-four{stroke:#ffad42;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}
+.path-metres{stroke:#37e4f4;stroke-width:1;stroke-dasharray:5 4;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}
+.path-shadow{stroke:#1119;stroke-width:3;fill:none;vector-effect:non-scaling-stroke}
+.spatial-knot{fill:#37e4f4;stroke:#163b48;stroke-width:.6;vector-effect:non-scaling-stroke}
+.trajectory-controls{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;margin:10px 0;font-size:14px}
+.trajectory-controls label{display:flex;align-items:center;gap:5px;margin:0}.swatch{width:22px;display:inline-block;border-top:2px solid #ffad42}.swatch.metres{border-color:#089bac;border-top-style:dotted}
+.trajectory-detail,.curve-note{font-size:12px;color:#526273;margin:7px 0 14px;line-height:1.7}
+.kinematics{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}.curve-panel{flex:1 1 400px;min-width:0;background:#f7f9fc;border:1px solid #dce3eb;border-radius:8px;padding:12px}
+.curve-panel h3{font-size:15px;margin:0 0 6px}.curve-panel svg{display:block;width:100%;height:auto;aspect-ratio:600/190;overflow:visible;font:12px SurveyCJK,sans-serif}
+.curve-status{font-size:13px;font-weight:normal;color:#526273;margin-left:12px}.navigation-hint{margin-top:14px;padding:14px 18px;border-left:4px solid #4277ba;background:#eff5fc;border-radius:4px;font-size:18px}.navigation-hint strong{font-size:14px;margin-right:14px}
+body[data-presentation=frozen100] .media .heading{margin-bottom:8px}
+body[data-presentation=frozen100] .qa{white-space:pre-wrap}
+@media(max-width:700px){.curve-panel{flex-basis:100%}.trajectory-controls{gap:8px 12px}.camera-cell{height:216px}.navigation-hint{font-size:16px}}

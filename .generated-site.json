@@ -1,0 +1,1 @@
+{"cases": 100, "images": 1227, "image_bytes": 128824044, "source_counts": {"wod": 12, "navsim_navtrain": 13, "bench2drive": 13, "nuscenes": 13, "navsim_navtest": 12, "lead360": 13, "simscale": 12, "olympus_final": 12}, "manifest_sha256": "835abe9da57141a6e266c69b1201ab7b85a178231b26041fd741e56e44e97748", "file_hashes_verified": true}

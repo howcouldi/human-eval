@@ -1,6 +1,8 @@
 'use strict';
 (() => {
   const M = window.SURVEY_MANIFEST;
+  const questionnaire = document.body.dataset.page === 'questionnaire';
+  const frozen = document.body.dataset.presentation === 'frozen100';
   if (M.schema_version !== 'omnidrive.review.v1.1') throw Error('Unsupported manifest');
   const params = new URLSearchParams(location.search);
   const test = params.get('test') === '1' || M.test_only;
@@ -8,13 +10,17 @@
   if (batch && !M.batches[batch]) throw Error('Unknown batch');
   const cases = batch ? M.cases.filter(c => M.batches[batch].includes(c.unit_id)) : M.cases;
   const $ = id => document.getElementById(id);
-  const state = {index: 0, locale: 'zh', reviewer: '', answers: {}, storageOK: true};
+  const state = {index: Math.max(0,cases.findIndex(c=>c.display_id===params.get('case'))), locale: 'zh', reviewer: '', answers: {}, storageOK: true};
   const words = {
     zh: {title:'驾驶数据标注质量问卷',reviewer:'匿名评者编号',export:'下载已完成答卷',draft:'下载全部草稿',import:'导入草稿',clear:'清除当前身份草稿',track:'视频证据',cur:'回到 CUR',errors:'错误类型（存在错误时至少选一项）',comment:'备注／错误位置（选填）',prev:'上一题',next:'下一题',decision:'决策问答质量',meta:'四字段行为标签核验',random:'随机问答核验',navigation:'导航与实际行车',execution:'标注与实际执行行为',question:'原始问题',answer:'原始回答',reason:'原始理由',scene:'场景事实',action:'动作合理性',reasoning:'推理支持',safety:'安全合理性',overall:'整体质量',verdict:'原标注可否直接使用',severity:'最严重问题',accuracy:'答案正确性',relevance:'切题程度',evidence:'场景证据支持',relation:'导航与 CUR 后行为的关系',alignment:'是否与目标时窗内实际执行一致',action_state:'Action · 动作',speed_state:'Speed · 速度',longitudinal_state:'Longitudinal · 纵向',lateral_state:'Lateral · 横向',input:'题目输入视频',executionTrack:'实际行为核验视频（含未来）',random_input:'随机 QA 的实际输入',correct:'正确',incorrect:'不正确',not_assessable:'无法判断／证据不足',not_applicable:'不适用（此任务不评价）',pass:'通过，可直接使用',minor_revision:'需要小修',major_error:'主要错误',none:'无明显问题',minor:'轻微',major:'主要',severe:'严重',executing:'一致，正在执行',valid_delayed:'导航有效，合理等待／让行',later_route_intent:'后续路线意图，当前尚未执行',conflict:'明确冲突／导航有误',supported:'一致，有依据',partly_supported:'部分一致',conflicted:'明确不一致',hallucination:'幻觉／事实错误',direction:'方向',speed:'速度',timing:'时序',trajectory:'轨迹',navigationError:'导航',other:'其他',dictionary_gap:'字典无法表达',correction:'修正类别',choose:'请选择',done:'本场景包已完成',incomplete:'尚未完成：请填写适用评分；标签错误时选择修正类别和错误类型。',saved:'草稿仅存当前浏览器，请下载交回组织者。',saveFailed:'浏览器保存失败，请及时下载。',preview:'当前为工程预览／校准包，不代表全量数据或人工质量结果。',test:'合成验收模式：导出不可作为真人结果。',mediaMissing:'视频不可用；不要凭标签猜测，请记录证据不足。',scopeWarning:'此轨道未确认与该 QA 输入完全一致，不可用额外帧补证据。',naMeta:'缺少权威标签／有效性声明，不生成或猜测标签。',noNav:'原始导航缺失，导航项不适用。',noAlignment:'未声明为实际行为描述，不能强制与示范轨迹一致。',noReviewer:'请先填写匿名评者编号（字母、数字、下划线、短横线）。',noRows:'没有可下载的已完成答卷；可下载草稿。',imported:'已导入',badImport:'导入失败：身份、版本、选项或本地草稿存在冲突。',clearConfirm:'清除当前评者的浏览器草稿？已下载文件不受影响。'},
     en: {title:'Driving Annotation Quality Review',reviewer:'Anonymous reviewer',export:'Download completed responses',draft:'Download all drafts',import:'Import drafts',clear:'Clear this profile',track:'Video evidence',cur:'Seek to CUR',errors:'Error types (select at least one when reporting an error)',comment:'Comment / error location (optional)',prev:'Previous',next:'Next',decision:'Decision QA Quality',meta:'MetaAction Verification',random:'Random QA Verification',navigation:'Navigation and Executed Behavior',execution:'Annotation–Execution Alignment',question:'Original question',answer:'Original answer',reason:'Original reason',scene:'Scene facts',action:'Action',reasoning:'Reasoning',safety:'Safety plausibility',overall:'Overall',verdict:'Can the annotation be used as-is?',severity:'Most severe issue',accuracy:'Accuracy',relevance:'Relevance',evidence:'Evidence support',relation:'Navigation relative to behavior after CUR',alignment:'Does the annotation match execution within the target window?',action_state:'Action',speed_state:'Speed',longitudinal_state:'Longitudinal',lateral_state:'Lateral',input:'Actual QA input',executionTrack:'Execution audit (includes future)',random_input:'Actual random QA input',correct:'Correct',incorrect:'Incorrect',not_assessable:'Cannot assess / insufficient evidence',not_applicable:'Not applicable',pass:'Pass, usable as-is',minor_revision:'Minor revision',major_error:'Major error',none:'None',minor:'Minor',major:'Major',severe:'Severe',executing:'Consistent and executing',valid_delayed:'Valid, reasonably delayed by yielding / waiting',later_route_intent:'Later route intent, not yet executing',conflict:'Conflict / incorrect navigation',supported:'Supported',partly_supported:'Partly supported',conflicted:'Conflicted',hallucination:'Hallucination / facts',direction:'Direction',speed:'Speed',timing:'Timing',trajectory:'Trajectory',navigationError:'Navigation',other:'Other',dictionary_gap:'Not expressible by dictionary',correction:'Corrected label',choose:'Choose',done:'This anchor is complete',incomplete:'Incomplete: rate applicable items; incorrect labels need corrections and error tags.',saved:'Drafts stay in this browser. Download and return responses to the organizer.',saveFailed:'Browser storage failed; download now.',preview:'Engineering preview / calibration only, not a population quality result.',test:'Synthetic test mode: exports are not human evidence.',mediaMissing:'Video unavailable. Do not infer correctness from the annotation.',scopeWarning:'Exact QA input scope is unverified. Do not use extra observations to support the answer.',naMeta:'Authoritative labels / validity unavailable; no invented labels.',noNav:'Navigation unavailable; this item does not apply.',noAlignment:'Not confirmed as executed behavior; no forced trajectory match.',noReviewer:'Enter an anonymous reviewer ID using letters, digits, underscores or hyphens.',noRows:'No completed responses to download; drafts remain available.',imported:'Imported',badImport:'Import rejected: identity, version, choices or existing draft conflict.',clearConfirm:'Clear browser drafts for this reviewer? Downloaded files remain unchanged.'}
   };
   const t = key => words[state.locale][key] || key;
   const text = value => typeof value === 'object' && value !== null ? value[state.locale] || value.zh || value.en || '' : value || '';
+  const decisionQuestion = {
+    en: 'You are an autonomous driving (ADAS) expert assistant. Answer based on the provided multi-view history frames and vehicle state, what is the most reasonable driving decision?',
+    zh: '你是一名自动驾驶（ADAS）专家助手。请根据提供的多视角历史图像和车辆状态，判断最合理的驾驶决策是什么？'
+  };
   const current = () => cases[state.index];
   const key = () => [M.schema_version,M.study_id,M.manifest_sha256,test?'test':'human',state.reviewer].join(':');
   const profileKey = [M.schema_version,M.study_id,M.manifest_sha256,test?'test':'human','profile'].join(':');
@@ -54,9 +60,16 @@
     $('progress').textContent=(state.locale==='zh'?'已完成 ':'Completed ')+count+' / '+cases.length;
     $('saveStatus').textContent=t(state.storageOK?'saved':'saveFailed');
     $('completion').textContent=current()&&valid(current(),state.answers[current().unit_id]?.annotation)?t('done'):t('incomplete');
-    [...$('nav').children].forEach((b,i)=>b.className=(i===state.index?'active ':'')+(valid(cases[i],state.answers[cases[i].unit_id]?.annotation)?'done':''));
+    [...$('nav').children].forEach((b,i)=>{
+      const c=cases[i],a=state.answers[c.unit_id]?.annotation;
+      const completed=valid(c,a),started=a&&(c.questions.some(q=>q.applicable&&a[q.id]!==undefined)||a.comment?.trim()||a.error_tags?.length||Object.keys(a.corrections||{}).length);
+      b.className=(i===state.index?'active ':'')+(completed?'done':started?'partial':'');
+      b.setAttribute('aria-label',(state.locale==='zh'?'第 '+(i+1)+' 题，':'Question '+(i+1)+', ')+(completed?(state.locale==='zh'?'已完成':'complete'):started?(state.locale==='zh'?'未完成':'in progress'):(state.locale==='zh'?'未填写':'unanswered')));
+      if(i===state.index)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');
+    });
   }
   function renderMedia() {
+    if(frozen){window.FROZEN_MEDIA.render(current(),state.locale);return;}
     const c=current();const old=$('track').value;$('track').replaceChildren();
     for(const id of ['input','random_input','execution']){const m=c.media[id];if(!m)continue;const option=node('option',t(id==='execution'?'executionTrack':id));option.value=id;$('track').append(option);}
     if(c.media[old])$('track').value=old;
@@ -68,16 +81,40 @@
       for(const [src,type] of [[m.src,'video/mp4'],[m.webm_src,'video/webm']])if(src){const source=node('source');source.src=src;source.type=type;video.append(source);}
       video.onloadedmetadata=()=>{if(video.dataset.source===m.src)video.currentTime=m.cur_s;};video.load();
     }
-    $('mediaNote').textContent=`CUR=${m.cur_s.toFixed(2)}s · ${m.observed_range_s.join(' → ')}s · source ${m.source_fps??'?'}Hz · encoded ${m.encoded_fps}fps · ${m.note}`+(($('track').value!=='execution'&&!m.input_scope_verified)?' '+t('scopeWarning'):'');
+    $('mediaNote').textContent=questionnaire
+      ? `CUR=${m.cur_s.toFixed(2)}s · ${m.observed_range_s.join(' → ')}s`+(($('track').value!=='execution'&&!m.input_scope_verified)?' · '+(state.locale==='zh'?'该 QA 的输入范围未确认':'QA input scope unverified'):'')
+      : `CUR=${m.cur_s.toFixed(2)}s · ${m.observed_range_s.join(' → ')}s · source ${m.source_fps??'?'}Hz · encoded ${m.encoded_fps}fps · ${m.note}`+(($('track').value!=='execution'&&!m.input_scope_verified)?' '+t('scopeWarning'):'');
+  }
+  function renderStatus() {
+    if(frozen)return;
+    const box=$('vehicleStatus');if(!box)return;
+    const c=current(),s=c.ego_status,zh=state.locale==='zh';box.replaceChildren();
+    box.append(node('h3','Status'));
+    const list=node('dl',undefined,'status-grid');
+    const item=(name,value)=>{const cell=node('div');cell.append(node('dt',name),node('dd',value));list.append(cell);};
+    item(zh?'历史末段速度（估算）':'Recent speed (estimated)',s?.speed_mps!=null?`${s.speed_mps.toFixed(2)} m/s · ${(s.speed_mps*3.6).toFixed(1)} km/h`:'NA');
+    item(zh?'速度对应区间':'Speed interval',s?.speed_interval_s?`${s.speed_interval_s[0]} → ${s.speed_interval_s[1]} s`:'NA');
+    item(zh?'导航意图':'Navigation intent',c.navigation.available?text(c.navigation.text):'NA');
+    for(const f of ['action_state','speed_state','longitudinal_state','lateral_state']) {
+      const field=c.meta_action.fields?.[f];item(t(f),field?.valid?field.label:'NA');
+    }
+    box.append(list);
   }
   function renderCards() {
     const c=current(),a=annotation();$('cards').replaceChildren();
-    for(const card of ['decision','meta','random','navigation','execution']){
+    for(const card of (frozen?['meta','decision','random','navigation','execution']:['decision','meta','random','navigation','execution'])){
       const questions=c.questions.filter(q=>q.card===card);if(!questions.length)continue;
       const box=node('div',undefined,'card');box.id='card-'+card;box.tabIndex=-1;box.dataset.card=card;box.append(node('h2',t(card)));
       if(card==='decision'||card==='random'){
         const qa=c[card==='decision'?'decision_qa':'random_qa'];
-        for(const [k,label] of [['question','question'],['answer','answer'],['reason','reason']])if(qa[k]){box.append(node('strong',k==='answer'&&qa.answer_kind==='selected_final_policy'?(state.locale==='zh'?'待核验最终 Policy（不是原VQA答复）':'Selected final policy (not the preserved VQA answer)'):t(label)),node('div',text(qa[k]),'qa '+(k==='answer'?'answer':'')));}
+        for(const [k,label] of [['question','question'],['answer','answer'],['reason','reason']])if(qa[k]){
+          let heading=t(label);
+          if(questionnaire)heading=state.locale==='zh'?({question:'问题',answer:card==='decision'?'决策':'回答',reason:'理由'})[k]:({question:'Question',answer:card==='decision'?'Decision':'Answer',reason:'Reason'})[k];
+          else if(qa.answer_kind==='cleaned_conditional_policy_v01')heading=state.locale==='zh'?({question:'清洗后问题',answer:'清洗后条件决策',reason:'清洗后理由'})[k]:({question:'Cleaned question',answer:'Cleaned conditional decision',reason:'Cleaned reason'})[k];
+          else if(k==='answer'&&qa.answer_kind==='selected_final_policy')heading=state.locale==='zh'?'待核验最终 Policy（不是原VQA答复）':'Selected final policy (not the preserved VQA answer)';
+          const value=card==='decision'&&k==='question'&&qa[k]===decisionQuestion.en?decisionQuestion[state.locale]:text(qa[k]);
+          box.append(node('strong',heading),node('div',value,'qa '+(k==='answer'?'answer':'')));
+        }
       }
       if(card==='navigation')box.append(node('div',c.navigation.available?text(c.navigation.text):t('noNav'),'qa'));
       if(card==='execution'&&c.task_type!=='executed_behavior')box.append(node('p',t('noAlignment'),'muted'));
@@ -86,7 +123,7 @@
         const short=q.id.split('.')[1];row.append(node('strong',t(short)));
         if(q.id.startsWith('meta.')){
           const m=c.meta_action.fields?.[short];
-          if(m?.valid)row.append(node('p',m.label+' · '+text(m.definition)+' · '+(state.locale==='zh'?'目标窗：':'Target window: ')+(m.target_window_s??'?')+'s','tag'));else row.append(node('p',t('naMeta'),'muted'));
+          if(m?.valid)row.append(node('p',m.label+' · '+text(m.definition)+' · '+(state.locale==='zh'?'目标窗：':'Target window: ')+(m.target_window_text||((m.target_window_s??'?')+'s')),'tag'));else row.append(node('p',t('naMeta'),'muted'));
         }
         if(!q.applicable){row.append(node('div',t('not_applicable'),'na'));box.append(row);continue;}
         const options=node('div',undefined,'options');
@@ -112,15 +149,17 @@
   }
   function renderQuickNavigation() {
     const zh=state.locale==='zh';
-    $('caseJumpLabel').textContent=zh?'跳到 case':'Go to case';$('jumpCase').textContent=zh?'跳转':'Go';
-    $('caseJump').max=cases.length;$('caseJump').value=state.index+1;
-    $('caseCount').textContent=zh?'共 '+cases.length+' 个 case':'of '+cases.length+' cases';
-    $('browseHint').textContent=zh?'无需填写，可直接查看任意 case 或问题；已填内容自动保留。':'Browse any case or question without answering; partial answers are kept.';
+    if($('caseJump')){
+      $('caseJumpLabel').textContent=zh?'跳到 case':'Go to case';$('jumpCase').textContent=zh?'跳转':'Go';
+      $('caseJump').max=cases.length;$('caseJump').value=state.index+1;
+    }
+    if($('caseCount'))$('caseCount').textContent=zh?'共 '+cases.length+' 题':'Questions: '+cases.length;
+    if($('browseHint'))$('browseHint').textContent=zh?'无需填写，可直接查看任意 case 或问题；已填内容自动保留。':'Browse any case or question without answering; partial answers are kept.';
     $('questionJumpLabel').textContent=zh?'定位具体问题':'Jump to a question';
     $('questionNav').replaceChildren();$('questionJump').replaceChildren();
     const placeholder=node('option',zh?'选择要查看的问题':'Choose a question');placeholder.value='';$('questionJump').append(placeholder);
     const c=current();if(!c)return;
-    for(const card of ['decision','meta','random','navigation','execution'])if(c.questions.some(q=>q.card===card)){
+    for(const card of (frozen?['meta','decision','random','navigation','execution']:['decision','meta','random','navigation','execution']))if(c.questions.some(q=>q.card===card)){
       const button=node('button',t(card));button.type='button';button.dataset.target=card;button.addEventListener('click',()=>goQuestion('card-'+card));$('questionNav').append(button);
     }
     for(const q of c.questions){const option=node('option',t(q.card)+' · '+t(q.id.split('.')[1]));option.value=q.id;$('questionJump').append(option);}
@@ -128,12 +167,14 @@
   function render() {
     document.documentElement.lang=state.locale==='zh'?'zh-CN':'en';$('locale').value=state.locale;
     $('title').textContent=t('title');document.querySelectorAll('[data-i18n]').forEach(n=>n.textContent=t(n.dataset.i18n));
-    $('study').textContent=M.study_id+' · '+M.schema_version;
-    $('warning').textContent=(M.pool!=='probability_audit'?t('preview'):'')+(test?' '+t('test'):'');
-    $('nav').replaceChildren();cases.forEach((c,i)=>{const b=node('button',c.display_id);b.addEventListener('click',()=>goCase(i));$('nav').append(b);});
+    $('study').textContent=questionnaire?'':M.study_id+' · '+M.schema_version;
+    $('warning').textContent=(questionnaire?'':M.pool!=='probability_audit'?t('preview'):'')+(test?' '+t('test'):'');
+    if($('nav').children.length!==cases.length){
+      $('nav').replaceChildren();cases.forEach((c,i)=>{const b=node('button',questionnaire?String(i+1):c.display_id);b.type='button';b.title=c.display_id;b.addEventListener('click',()=>goCase(i));$('nav').append(b);});
+    }
     if(!current()){$('caseTitle').textContent='No cases';return;}
     const c=current(),a=annotation();$('caseTitle').textContent=c.display_id;$('source').textContent=c.source;
-    $('warnings').textContent=(c.warnings||[]).map(text).join(' ');renderMedia();renderCards();renderQuickNavigation();
+    $('warnings').textContent=questionnaire?'':(c.warnings||[]).map(text).join(' ');renderMedia();renderStatus();renderCards();renderQuickNavigation();
     $('errorTags').replaceChildren();for(const value of M.rubric.error_tags){const label=node('label');const input=node('input');input.type='checkbox';input.name='error_tag';input.value=value;input.checked=a.error_tags.includes(value);input.addEventListener('change',capture);label.append(input,document.createTextNode(t(value==='navigation'?'navigationError':value)));$('errorTags').append(label);}
     $('comment').value=a.comment||'';$('prev').disabled=state.index===0;$('next').disabled=state.index===cases.length-1;progress();
   }
@@ -160,19 +201,22 @@
   });
   $('comment').addEventListener('input',capture);
   $('locale').addEventListener('change',()=>{capture();state.locale=$('locale').value;save();render();});
-  $('reviewer').addEventListener('change',()=>{capture();state.reviewer=$('reviewer').value.trim();load();save();render();});
+  $('reviewer').addEventListener('change',()=>{const reviewer=$('reviewer').value.trim();$('reviewer').value=reviewer;if(reviewer===state.reviewer)return;capture();state.reviewer=reviewer;load();save();requestAnimationFrame(render);});
+  if(!frozen){
   $('track').addEventListener('change',renderMedia);
   $('cur').addEventListener('click',()=>{$('video').pause();$('video').currentTime=current().media[$('track').value].cur_s;});
   function frame(delta){const video=$('video'),m=current().media[$('track').value];video.pause();video.currentTime=Math.max(0,Math.min(m.duration_s-1/m.encoded_fps,video.currentTime+delta/m.encoded_fps));}
   $('backFrame').addEventListener('click',()=>frame(-1));$('nextFrame').addEventListener('click',()=>frame(1));
   $('video').addEventListener('timeupdate',()=>{$('time').textContent=$('video').currentTime.toFixed(2)+'s';});
   $('video').addEventListener('error',()=>{$('mediaError').textContent=t('mediaMissing');});
+  }
   $('prev').addEventListener('click',()=>goCase(state.index-1));$('next').addEventListener('click',()=>goCase(state.index+1));
-  $('jumpCase').addEventListener('click',()=>goCase(Number($('caseJump').value)-1));
-  $('caseJump').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();goCase(Number($('caseJump').value)-1);}});
+  $('jumpCase')?.addEventListener('click',()=>goCase(Number($('caseJump').value)-1));
+  $('caseJump')?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();goCase(Number($('caseJump').value)-1);}});
   $('questionJump').addEventListener('change',()=>goQuestion('question-'+$('questionJump').value));
   $('export').addEventListener('click',()=>exportRows(false));$('draft').addEventListener('click',()=>exportRows(true));
   $('clear').addEventListener('click',()=>{if(confirm(t('clearConfirm'))){state.answers={};save();render();}});
   try{const p=JSON.parse(localStorage.getItem(profileKey)||'{}');state.reviewer=p.reviewer||'';state.locale=p.locale==='en'?'en':'zh';}catch(_){}
   $('reviewer').value=state.reviewer;load();render();
+  if($('casePicker'))new ResizeObserver(()=>document.documentElement.style.setProperty('--case-nav-height',$('casePicker').getBoundingClientRect().height+'px')).observe($('casePicker'));
 })();

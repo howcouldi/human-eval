@@ -1,21 +1,19 @@
 <!doctype html>
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OmniDriveData · Human Review v1.1</title><link rel="stylesheet" href="style.css"></head>
-<body>
-<header><div><small>OMNIDRIVEDATA · HUMAN REVIEW v1.1</small><h1 id="title"></h1><p id="study"></p></div><div><select id="locale" aria-label="Language"><option value="zh">中文</option><option value="en">English</option></select><p id="progress"></p></div></header>
+<title>驾驶数据问卷</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="questionnaire.css"><link rel="stylesheet" href="media.css"></head>
+<body data-page="questionnaire" data-presentation="frozen100">
+<section id="casePicker" class="survey-case-picker" aria-label="选题"><div class="case-picker-legend"><strong id="caseCount">共 100 题</strong><span><i class="legend-empty"></i>未填写</span><span><i class="legend-partial"></i>未完成</span><span><i class="legend-done"></i>已完成</span></div><nav id="nav" aria-label="Questions 1–100"></nav></section>
+<header><div><h1 id="title"></h1><p id="study" hidden></p></div><div><select id="locale" aria-label="Language"><option value="zh">中文</option><option value="en">English</option></select><p id="progress"></p></div></header>
 <main>
 <section class="toolbar"><label><span data-i18n="reviewer"></span><input id="reviewer" maxlength="64" placeholder="reviewer-01" pattern="[A-Za-z0-9_-]+"></label><button id="export" data-i18n="export"></button><button id="draft" data-i18n="draft"></button><label class="button"><span data-i18n="import"></span><input id="import" type="file" accept=".jsonl" hidden></label><button id="clear" data-i18n="clear"></button></section>
 <aside id="warning"></aside>
-<section class="browse-nav" aria-label="Quick navigation">
-<div class="case-controls"><label><span id="caseJumpLabel">跳到 case</span><input id="caseJump" type="number" min="1" step="1" inputmode="numeric" aria-labelledby="caseJumpLabel"></label><button id="jumpCase" type="button">跳转</button><span id="caseCount"></span></div>
-<p id="browseHint" class="muted">无需填写，可直接查看任意 case 或问题。</p>
-<nav id="nav" aria-label="Cases"></nav>
+<section class="browse-nav" aria-label="题目导航">
 <nav id="questionNav" aria-label="Questions in this case"></nav>
 <label class="question-jump"><span id="questionJumpLabel">定位具体问题</span><select id="questionJump" aria-labelledby="questionJumpLabel"></select></label>
 </section>
-<section class="media"><div class="heading"><h2 id="caseTitle"></h2><span id="source"></span></div><p id="warnings"></p><div class="video-controls"><label><span data-i18n="track"></span><select id="track"></select></label><button id="cur" data-i18n="cur"></button><button id="backFrame">−1 frame</button><button id="nextFrame">+1 frame</button><span id="time"></span></div><video id="video" controls playsinline preload="metadata"></video><p id="mediaNote"></p><p id="mediaError" role="alert"></p></section>
+<section class="media"><div class="heading"><h2 id="caseTitle"></h2><span id="source"></span></div><p id="warnings" hidden></p><div id="frozenMedia"></div></section>
 <section id="cards"></section>
 <section><h3 data-i18n="errors"></h3><div id="errorTags" class="options"></div><label><span data-i18n="comment"></span><textarea id="comment" rows="2"></textarea></label><p id="completion"></p></section>
 <footer><button id="prev" data-i18n="prev"></button><span id="saveStatus"></span><button id="next" data-i18n="next"></button></footer>
-</main><div id="toast" role="status"></div><script src="manifest.js"></script><script src="app.js"></script></body></html>
+</main><div id="toast" role="status"></div><script src="manifest.js"></script><script src="media.js"></script><script src="app.js"></script></body></html>
